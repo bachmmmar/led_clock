@@ -4,7 +4,18 @@ This project builds a Clock with RGB LED's araged on a large circle showing curr
 It uses an Arduino Nano with Real Time Clock (RTC) and WS2811/WS2812 LED strip to display time. Ambient light sensor helps to have the right light during daytime or night.
 
 
-## Main Components
+## Circuit
+The following circuit was drawn with Fritzing and is located in [`circuit/led_clock.fzz`](./circuit/led_clock.fzz) folder. 
+![breadboard circuit](./circuit/led_clock_bb.jpg)
+
+## Mechanical Components
+| Item | Supplier - Partnumber | Image | Details |
+| ---  | ---                   | ---   | ---     |
+| Spacer for wall mounting | abstandshalter.com - 1.100.536 (50mm) | <img src="./img/spacer-13x50mm.jpeg" width="250"> | [Link](https://www.abstandshalter.com/wandabstandshalter/buchstabenbefestigung/schriften-befestigung-gewinde-edelstahl-oe-13x50mm-distanzhuelse-v2a) |
+| Composite mounting | Suter Kunststoffe AG - 491.5203 (15x38mm, M5) | <img src="./img/mount_m5.jpg" width="250"> | [Link](https://shop.swiss-composite.ch/pi.php/Formenbau/Composite-Muttern-Schrauben/Composite-Mutter-INOX-M-5-38x15mm-pStk.html) |
+
+
+## Electrical Components
 | Item | Supplier - Partnumber | Image | Details |
 | ---  | ---                   | ---   | ---     |
 | Arduino Nano | Aliexpress - Arduino Nano V3.0 (ATmega328) | <img src="./img/arduino_nano_v3.webp" width="250"> | [Datasheet](datasheet/NanoV3.0_ATmega328_ali.pdf) |
