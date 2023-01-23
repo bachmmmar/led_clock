@@ -58,7 +58,7 @@ void Clock::incrementMinutes(void) {
 
     _rtc.writeProtect(true);
 
-    logCurrentTime();
+    logCurrentTime("minutes incremented, now it is: ");
 }
 
 void Clock::incrementHours(void) {
@@ -84,7 +84,7 @@ void Clock::incrementHours(void) {
 
     _rtc.writeProtect(true);
 
-    logCurrentTime();
+    logCurrentTime("hours incremented, now it is: ");
 }
 
 String padding0(uint8_t num) {
@@ -96,7 +96,11 @@ String padding0(uint8_t num) {
 }
 
 void Clock::logCurrentTime() {
-    String str = String("current time is: " +
+    logCurrentTime("current time is: ");
+}
+
+void Clock::logCurrentTime(const String &text) {
+    String str = String(text +
                         String(current_time.date) + "." + String(current_time.mon) + "." + String(current_time.yr) + "  " +
                         padding0(current_time.hr) + ":" + padding0(current_time.min) + ":" + padding0(current_time.sec));
 

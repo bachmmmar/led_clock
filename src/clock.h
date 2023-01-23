@@ -18,6 +18,7 @@ public:
     void incrementHours(void);
 
     void logCurrentTime(void);
+    void logCurrentTime(const String & text);
 
 private:
     Logger * _logger;

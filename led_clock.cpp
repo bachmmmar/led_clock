@@ -24,13 +24,16 @@ Clock clk(&clk_cfg, &logger);
 Adafruit_NeoPixel pixels(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 
+bool hour_pin_state, minute_pin_state;
+
+
 
 bool isHourPinPressed() {
-    return !static_cast<bool>(digitalRead(BUTTON_HOURS_PIN));
+    return static_cast<bool>(digitalRead(BUTTON_HOURS_PIN));
 }
 
 bool isMinutePinPressed() {
-    return !static_cast<bool>(digitalRead(BUTTON_MINUTE_PIN));
+    return static_cast<bool>(digitalRead(BUTTON_MINUTE_PIN));
 }
 
 
@@ -83,6 +86,9 @@ void setup() {
 
     pixels.begin();
     setLedsToDefault();
+
+    hour_pin_state = isHourPinPressed();
+    minute_pin_state = isMinutePinPressed();
 }
 
 
@@ -90,18 +96,21 @@ void setup() {
 void loop() {
     clk.update();
 
-    if (isHourPinPressed()) {
+    if (isHourPinPressed() && !hour_pin_state) {
         clk.incrementHours();
     }
-    else if (isMinutePinPressed()) {
+    else if (isMinutePinPressed() && !minute_pin_state) {
         clk.incrementMinutes();
     }
+
+    hour_pin_state = isHourPinPressed();
+    minute_pin_state = isMinutePinPressed();
 
     setLedsToDefault();
     setTimeOnLeds();
     pixels.show();
 
-    clk.logCurrentTime();
+    //clk.logCurrentTime();
 
-    delay(1000);
+    delay(50);
 }
