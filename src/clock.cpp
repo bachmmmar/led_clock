@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include <time.h>
 #include "clock.h"
-
+#include "logger.h"
+#include "utils.h"
 
 
 Clock::Clock(ClockConfig_t * config, Logger * logger) :
@@ -87,13 +88,6 @@ void Clock::incrementHours(void) {
     logCurrentTime("hours incremented, now it is: ");
 }
 
-String padding0(uint8_t num) {
-    if (num > 9) {
-        return String(num);
-    } else {
-        return "0" + String(num);
-    }
-}
 
 void Clock::logCurrentTime() {
     logCurrentTime("current time is: ");
@@ -102,7 +96,7 @@ void Clock::logCurrentTime() {
 void Clock::logCurrentTime(const String &text) {
     String str = String(text +
                         String(current_time.date) + "." + String(current_time.mon) + "." + String(current_time.yr) + "  " +
-                        padding0(current_time.hr) + ":" + padding0(current_time.min) + ":" + padding0(current_time.sec));
+                        Utils::padding0(current_time.hr) + ":" + Utils::padding0(current_time.min) + ":" + Utils::padding0(current_time.sec));
 
     _logger->log(Logger::INFO, str);
 }

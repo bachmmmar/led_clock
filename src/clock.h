@@ -2,8 +2,9 @@
 
 #include "arduino-ds1302/DS1302.h"
 #include "config.h"
-#include "logger.h"
 
+
+class Logger;
 
 class Clock {
 
