@@ -6,7 +6,7 @@ It uses an Arduino Nano with Real Time Clock (RTC) and WS2811/WS2812 LED strip t
 
 ## Circuit
 The following circuit was drawn with Fritzing and is located in [`circuit/led_clock.fzz`](./circuit/led_clock.fzz) folder. 
-![breadboard circuit](./circuit/led_clock_bb.jpg)
+![breadboard circuit](./circuit/led_clock_bb.png)
 
 ## Mechanical Components
 | Item | Supplier - Partnumber | Image | Details |
