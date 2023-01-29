@@ -3,13 +3,17 @@
 #include "utils.h"
 
 
-uint32_t COLOR_HOURS = Adafruit_NeoPixel::Color(200, 0, 0);
-uint32_t COLOR_MINUTES = Adafruit_NeoPixel::Color(0, 0, 200);
-uint32_t COLOR_SECONDS = Adafruit_NeoPixel::Color(0, 200, 0);
-uint32_t COLOR_MARKS = Adafruit_NeoPixel::Color(30, 30, 30);
-
 
 Leds::Leds(LedConfig_t *config, Logger *logger) :
+        BASE_COLOR({.hours=Adafruit_NeoPixel::Color(255, 0, 0),
+                    .minutes=Adafruit_NeoPixel::Color(0, 0, 255),
+                    .seconds=Adafruit_NeoPixel::Color(0, 255, 0),
+                    .marks=Adafruit_NeoPixel::Color(30, 30, 30)}),
+        MIN_COLOR({.hours=Adafruit_NeoPixel::Color(5, 0, 0),
+                   .minutes=Adafruit_NeoPixel::Color(0, 0, 5),
+                   .seconds=Adafruit_NeoPixel::Color(0, 5, 0),
+                   .marks=Adafruit_NeoPixel::Color(1, 1, 1)}),
+        _dimmed_color(BASE_COLOR),
         _logger(logger),
         _config(config),
         _inner_ring(config->inner_ring_num_leds, config->inner_ring_pin, NEO_GRB + NEO_KHZ800),
@@ -35,24 +39,24 @@ Leds::Leds(LedConfig_t *config, Logger *logger) :
 
 void Leds::setTimeOnOuterRing(uint8_t hour, uint8_t min, uint16_t ms_in_min) {
     // hours
-    _outer_ring.setPixelColor((static_cast<uint16_t>(hour) * 5 * _outer_ring_min_multiplier) >> 8, COLOR_HOURS);
+    _outer_ring.setPixelColor((static_cast<uint16_t>(hour) * 5 * _outer_ring_min_multiplier) >> 8, _dimmed_color.hours);
 
     // minutes
-    _outer_ring.setPixelColor((static_cast<uint16_t>(min) * _outer_ring_min_multiplier) >> 8, COLOR_MINUTES);
+    _outer_ring.setPixelColor((static_cast<uint16_t>(min) * _outer_ring_min_multiplier) >> 8, _dimmed_color.minutes);
 
     // seconds
-    _outer_ring.setPixelColor(static_cast<uint16_t>((static_cast<uint32_t>(ms_in_min) * _outer_ring_second_multiplier) >> 16), COLOR_SECONDS);
+    _outer_ring.setPixelColor(static_cast<uint16_t>((static_cast<uint32_t>(ms_in_min) * _outer_ring_second_multiplier) >> 16), _dimmed_color.seconds);
 }
 
 void Leds::setTimeOnInnerRing(uint8_t hour, uint8_t min, uint8_t sec) {
     // hours
-    _inner_ring.setPixelColor(hour * 5, COLOR_HOURS);
+    _inner_ring.setPixelColor(hour * 5, _dimmed_color.hours);
 
     // minutes
-    _inner_ring.setPixelColor(min, COLOR_MINUTES);
+    _inner_ring.setPixelColor(min, _dimmed_color.minutes);
 
     // seconds
-    _inner_ring.setPixelColor(sec, COLOR_SECONDS);
+    _inner_ring.setPixelColor(sec, _dimmed_color.seconds);
 }
 
 
@@ -60,22 +64,22 @@ void Leds::setInnerRingDefaults(void) {
     _inner_ring.clear();
 
     // add orientation marks
-    _inner_ring.setPixelColor(0, COLOR_MARKS);
+    _inner_ring.setPixelColor(0, _dimmed_color.marks);
     uint16_t one_forth = _config->inner_ring_num_leds >> 2;
-    _inner_ring.setPixelColor(one_forth, COLOR_MARKS);
-    _inner_ring.setPixelColor(_config->inner_ring_num_leds>>1, COLOR_MARKS);
-    _inner_ring.setPixelColor(one_forth*3, COLOR_MARKS);
+    _inner_ring.setPixelColor(one_forth, _dimmed_color.marks);
+    _inner_ring.setPixelColor(_config->inner_ring_num_leds>>1, _dimmed_color.marks);
+    _inner_ring.setPixelColor(one_forth*3, _dimmed_color.marks);
 }
 
 void Leds::setOuterRingDefaults(void) {
     _outer_ring.clear();
 
     // add orientation marks
-    _outer_ring.setPixelColor(0, COLOR_MARKS);
+    _outer_ring.setPixelColor(0, _dimmed_color.marks);
     uint16_t one_forth = _config->outer_ring_num_leds >> 2;
-    _outer_ring.setPixelColor(one_forth, COLOR_MARKS);
-    _outer_ring.setPixelColor(_config->outer_ring_num_leds>>1, COLOR_MARKS);
-    _outer_ring.setPixelColor(one_forth*3, COLOR_MARKS);
+    _outer_ring.setPixelColor(one_forth, _dimmed_color.marks);
+    _outer_ring.setPixelColor(_config->outer_ring_num_leds>>1, _dimmed_color.marks);
+    _outer_ring.setPixelColor(one_forth*3, _dimmed_color.marks);
 }
 
 uint16_t Leds::estimateMillisecondsInMinute(uint8_t current_sec) {
@@ -101,6 +105,27 @@ void Leds::setup(void) {
     _time_previous_second = millis();
 }
 
+uint32_t Leds::scaleColor(const color_t & input, const color_t & min, uint16_t scale) {
+    color_t out;
+    out.splitted.r = max(min.splitted.r, (static_cast<uint16_t>(input.splitted.r) * scale) >> 8);
+    out.splitted.g = max(min.splitted.g, (static_cast<uint16_t>(input.splitted.g) * scale) >> 8);
+    out.splitted.b = max(min.splitted.b, (static_cast<uint16_t>(input.splitted.b) * scale) >> 8);
+    //_logger->log(Logger::DEBUG, "Scale:" + String(scale) + ", rin:" + String(input.splitted.r) + ", rout:" + String(out.splitted.r));
+    return out.color;
+}
+
+void Leds::updateBrightness(const uint32_t & lux) {
+    // lux should be 40000 in max. 1000 means very bright day
+    uint16_t scale = min(255L, lux >> 2);
+
+    color_t test {.color = _dimmed_color.marks};
+    //_logger->log(Logger::DEBUG, "Scale:" + String(scale) + ", r:" + String(test.splitted.r) + ", g:" + String(test.splitted.g)+ ", b:" + String(test.splitted.b));
+
+    _dimmed_color.hours = scaleColor(color_t {.color=BASE_COLOR.hours},color_t {.color=MIN_COLOR.hours}, scale);
+    _dimmed_color.minutes = scaleColor(color_t {.color=BASE_COLOR.minutes}, color_t {.color=MIN_COLOR.minutes}, scale);
+    _dimmed_color.seconds = scaleColor(color_t {.color=BASE_COLOR.seconds}, color_t {.color=MIN_COLOR.seconds}, scale);
+    _dimmed_color.marks = scaleColor(color_t {.color=BASE_COLOR.marks}, color_t {.color=MIN_COLOR.marks}, scale);
+}
 
 void Leds::update(const Time & current_time) {
     setInnerRingDefaults();

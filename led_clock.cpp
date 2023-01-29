@@ -69,9 +69,10 @@ void loop() {
     hour_pin_state = isHourPinPressed();
     minute_pin_state = isMinutePinPressed();
 
+    if (ambient.update()) {
+        led.updateBrightness(ambient.brightness_lux);
+    }
     led.update(clk.current_time);
 
-    ambient.update();
-
-    delay(50);
+    delay(1);
 }
