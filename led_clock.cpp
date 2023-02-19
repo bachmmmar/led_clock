@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include "src/timer/Timer.h"
 #include "src/clock.h"
 #include "src/leds.h"
 #include "src/ambient.h"
@@ -9,21 +8,19 @@
 #define BUTTON_MINUTE_PIN 9
 
 
-
 Logger logger;
 ClockConfig_t clk_cfg = {5, 6, 7};
 Clock clk(&clk_cfg, &logger);
 //                     inner_ring_pin,
 LedConfig_t led_cfg = {.inner_ring_pin=3, .outer_ring_pin=2,
-                       .inner_ring_num_leds=60, .outer_ring_num_leds=90};
+                       .inner_ring_num_leds=229, .outer_ring_num_leds=255};
 Leds led(&led_cfg, &logger);
 
-LightSensorConfig_t light_cfg = {.tsl_i2c_addr=0x39, .update_time_ms=2000};
+LightSensorConfig_t light_cfg = {.tsl_i2c_addr=0x39, .update_time_ms=5000};
 Ambient ambient(&light_cfg, &logger);
 
 
 bool hour_pin_state, minute_pin_state;
-
 
 
 bool isHourPinPressed() {
@@ -47,7 +44,6 @@ void setup() {
 
     hour_pin_state = isHourPinPressed();
     minute_pin_state = isMinutePinPressed();
-
 
     clk.setup();
     led.setup();

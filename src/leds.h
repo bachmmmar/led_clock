@@ -33,6 +33,15 @@ private:
         } splitted;
     } color_t;
 
+    typedef struct {
+        int last_pixel;
+        int current_pixel;
+        int direction;
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+    } effect_rotation_pxl_t;
+
     const colors_t BASE_COLOR;
     const colors_t MIN_COLOR;
     colors_t _dimmed_color;
@@ -47,12 +56,23 @@ private:
     uint16_t _outer_ring_min_multiplier;
     uint32_t _outer_ring_second_multiplier;
 
+    uint16_t _inner_ring_min_multiplier;
+    uint32_t _inner_ring_second_multiplier;
+
     uint32_t _last_status_time_ms;
 
+    effect_rotation_pxl_t _rotation_pixels [7];
+
+    void showTime(const Time & current_time);
+    void fullHourSpinn(uint8_t rotations);
+    static effect_rotation_pxl_t initRotationPxl(uint8_t pos, uint8_t max_pixel, uint8_t r, uint8_t g, uint8_t b);
+    void updateRotationPxl(effect_rotation_pxl_t * pxl);
+
+    void fixingClockRotation(uint8_t *hour, uint8_t *min, uint16_t *ms_in_min);
     void setInnerRingDefaults(void);
     void setOuterRingDefaults(void);
     void setTimeOnOuterRing(uint8_t hour, uint8_t min, uint16_t ms_in_min);
-    void setTimeOnInnerRing(uint8_t hour, uint8_t min, uint8_t sec);
+    void setTimeOnInnerRing(uint8_t hour, uint8_t min, uint16_t ms_in_min);
     uint16_t estimateMillisecondsInMinute(uint8_t current_sec);
 
     uint32_t scaleColor(const color_t & input, const color_t & min, uint16_t scale);
