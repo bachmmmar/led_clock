@@ -1,4 +1,5 @@
 #pragma once
+#include "TSL2561-Arduino-Library/TSL2561.h"
 
 typedef struct {
     uint8_t ce_pin;
@@ -17,4 +18,5 @@ typedef struct {
 typedef struct {
     uint8_t tsl_i2c_addr;  // float (addr 0x39), ground (0x29), high (0x49)
     uint16_t update_time_ms;  // time in milliseconds to update the brightness
+    tsl2561IntegrationTime_t integration_time;
 } LightSensorConfig_t;

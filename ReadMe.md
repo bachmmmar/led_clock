@@ -4,6 +4,14 @@ This project builds a Clock with RGB LED's araged on a large circle showing curr
 It uses an Arduino Nano with Real Time Clock (RTC) and WS2811/WS2812 LED strip to display time. Ambient light sensor helps to have the right light during daytime or night.
 
 
+# Overview
+The images below show the main parts of the system.
+
+| Button Mounted | Top View of Circuit | Side View of circuit |
+| ---            | ---                 |   ---                |
+| <img src="./img/overview_button_mounted.jpg" width="100%"> | <img src="./img/overview_circuit.jpg" width="100%"> | <img src="./img/overview_side.jpg" width="100%"> |
+
+
 ## Circuit
 The following circuit was drawn with Fritzing and is located in [`circuit/led_clock.fzz`](./circuit/led_clock.fzz) folder. 
 ![breadboard circuit](./circuit/led_clock_bb.png)
@@ -37,3 +45,8 @@ For controlling the LEDs, communicating with the RTC or getting ambient light th
  - [WS2812B RGB LED](https://github.com/adafruit/Adafruit_NeoPixel)
  
  All libraries are directly located in the `src/` directory.
+ 
+### Time Compesation
+As my arduino has a verry inaccurate clock, the millis function return the wrong values.
+In my case one minute tages 36'733 millis instead of 60000.
+I need to multiply all millis() by 1.63

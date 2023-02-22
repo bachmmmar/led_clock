@@ -34,12 +34,11 @@ private:
     } color_t;
 
     typedef struct {
-        int last_pixel;
-        int current_pixel;
-        int direction;
-        uint8_t r;
-        uint8_t g;
-        uint8_t b;
+        int last_inner_pixel;
+        int current_inner_pixel;
+        int last_outer_pixel;
+        int current_outer_pixel;
+        color_t color;
     } effect_rotation_pxl_t;
 
     const colors_t BASE_COLOR;
@@ -61,19 +60,24 @@ private:
 
     uint32_t _last_status_time_ms;
 
-    effect_rotation_pxl_t _rotation_pixels [7];
+    #define NUM_ROTATION_PIXELS 7
+    const effect_rotation_pxl_t BASE_ROTATION_PIXELS [NUM_ROTATION_PIXELS];
+    const uint32_t MIN_ROTATION_PIXELS [NUM_ROTATION_PIXELS];
+    const int16_t rotation_speed = 2;
+    effect_rotation_pxl_t _dimmed_rotation_pixels [NUM_ROTATION_PIXELS];
 
     void showTime(const Time & current_time);
-    void fullHourSpinn(uint8_t rotations);
+    void fullHourSpin(uint8_t rotations);
     static effect_rotation_pxl_t initRotationPxl(uint8_t pos, uint8_t max_pixel, uint8_t r, uint8_t g, uint8_t b);
-    void updateRotationPxl(effect_rotation_pxl_t * pxl);
+    void updateInnerRotationPxl(effect_rotation_pxl_t * pxl);
+    void updateOuterRotationPxl(effect_rotation_pxl_t *pxl);
 
-    void fixingClockRotation(uint8_t *hour, uint8_t *min, uint16_t *ms_in_min);
+    static void fixingClockRotation(uint8_t *hour, uint8_t *min, uint16_t *ms_in_min);
     void setInnerRingDefaults(void);
     void setOuterRingDefaults(void);
     void setTimeOnOuterRing(uint8_t hour, uint8_t min, uint16_t ms_in_min);
     void setTimeOnInnerRing(uint8_t hour, uint8_t min, uint16_t ms_in_min);
-    uint16_t estimateMillisecondsInMinute(uint8_t current_sec);
+    uint16_t estimateMillisecondsInMinute(uint8_t current_sec, uint8_t current_min);
 
-    uint32_t scaleColor(const color_t & input, const color_t & min, uint16_t scale);
+    static uint32_t scaleColor(const color_t & input, const color_t & min, uint16_t scale);
 };

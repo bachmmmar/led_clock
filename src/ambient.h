@@ -21,6 +21,14 @@ public:
 
 
 private:
+    typedef enum {
+        idle = 0,
+        sampling,
+        stop_sampling,
+        calculating,
+        returning_true
+    } ambient_sensing_state_t;
+
     typedef union {
         uint32_t full_lumosity;
         struct {
@@ -32,8 +40,13 @@ private:
     Logger * _logger;
     LightSensorConfig_t * _config;
     TSL2561 _sensor;
+    ambient_sensing_state_t _state;
     uint32_t _last_update_time_ms;
     raw_data_t sensor_raw;
 
-    void updateLux();
+    void doSampling();
+    uint16_t getIntegrationTimeInMs() const;
+    void doReadout();
+
+    void stopSampling();
 };
