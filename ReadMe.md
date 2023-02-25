@@ -1,5 +1,8 @@
 
 This project builds a Clock with RGB LED's araged on a large circle showing current time.
+<img src="./img/led_ring_front.jpg" width="350">
+
+Clock showing 10:05 and 36 seconds.
 
 It uses an Arduino Nano with Real Time Clock (RTC) and WS2811/WS2812 LED strip to display time. Ambient light sensor helps to have the right light during daytime or night.
 
