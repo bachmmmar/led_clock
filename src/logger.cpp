@@ -13,8 +13,8 @@ void Logger::setup(void) {
 
 void Logger::log(Severity severity, const String & message) {
     if (current_severity_ <= severity) {
-        String str = String(String(millis()) + ";" + getSeverityAsString(severity) + ";" + message);
-        Serial.println(str.c_str());
+        //String str = String(String(millis()) + ";" + getSeverityAsString(severity) + ";" + message);
+        Serial.println(message.c_str());
     }
 }
 
