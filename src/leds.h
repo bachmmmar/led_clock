@@ -12,7 +12,7 @@ public:
     explicit Leds(LedConfig_t * config, Logger * logger);
 
     void setup(void);
-    void update(const Time & current_time);
+    void update(const Time & current_time, const uint16_t & milliseconds_in_minute);
     void updateBrightness(const uint32_t & lux);
 
 private:
@@ -47,15 +47,14 @@ private:
 
     Logger * _logger;
     LedConfig_t * _config;
+    uint8_t pxl_buffer[3*255];
     Adafruit_NeoPixel _inner_ring;
     Adafruit_NeoPixel _outer_ring;
-    uint8_t _previous_second;
-    uint32_t _time_previous_second;
 
-    uint16_t _outer_ring_min_multiplier;
+    uint32_t _outer_ring_min_multiplier;
     uint32_t _outer_ring_second_multiplier;
 
-    uint16_t _inner_ring_min_multiplier;
+    uint32_t _inner_ring_min_multiplier;
     uint32_t _inner_ring_second_multiplier;
 
     uint32_t _last_status_time_ms;
@@ -63,10 +62,10 @@ private:
     #define NUM_ROTATION_PIXELS 7
     const effect_rotation_pxl_t BASE_ROTATION_PIXELS [NUM_ROTATION_PIXELS];
     const uint32_t MIN_ROTATION_PIXELS [NUM_ROTATION_PIXELS];
-    const int16_t rotation_speed = 2;
+    const int16_t rotation_speed = 4;
     effect_rotation_pxl_t _dimmed_rotation_pixels [NUM_ROTATION_PIXELS];
 
-    void showTime(const Time & current_time);
+    void showTime(const Time & current_time, uint16_t ms);
     void fullHourSpin(uint8_t rotations);
     static effect_rotation_pxl_t initRotationPxl(uint8_t pos, uint8_t max_pixel, uint8_t r, uint8_t g, uint8_t b);
     void updateInnerRotationPxl(effect_rotation_pxl_t * pxl);
@@ -77,7 +76,6 @@ private:
     void setOuterRingDefaults(void);
     void setTimeOnOuterRing(uint8_t hour, uint8_t min, uint16_t ms_in_min);
     void setTimeOnInnerRing(uint8_t hour, uint8_t min, uint16_t ms_in_min);
-    uint16_t estimateMillisecondsInMinute(uint8_t current_sec, uint8_t current_min);
 
     static uint32_t scaleColor(const color_t & input, const color_t & min, uint16_t scale);
 };

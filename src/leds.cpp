@@ -16,10 +16,9 @@ Leds::Leds(LedConfig_t *config, Logger *logger) :
         _dimmed_color(BASE_COLOR),
         _logger(logger),
         _config(config),
-        _inner_ring(config->inner_ring_num_leds, config->inner_ring_pin, NEO_GRB + NEO_KHZ800),
-        _outer_ring(config->outer_ring_num_leds, config->outer_ring_pin, NEO_GRB + NEO_KHZ800),
-        _previous_second(0),
-        _time_previous_second(0),
+        // nope: NEO_RGBW, NEO_WRGB
+        _inner_ring(config->inner_ring_num_leds, config->inner_ring_pin, NEO_GRB + NEO_KHZ800, pxl_buffer),
+        _outer_ring(config->outer_ring_num_leds, config->outer_ring_pin, NEO_GRB + NEO_KHZ800, pxl_buffer),
         _last_status_time_ms(0),
         BASE_ROTATION_PIXELS({initRotationPxl(0, config->inner_ring_num_leds, 255, 0, 0),
                               initRotationPxl(4, config->inner_ring_num_leds, 0, 255, 0),
@@ -41,10 +40,10 @@ Leds::Leds(LedConfig_t *config, Logger *logger) :
 
     // Time 0..60 --> unit8_t (6bit)
     // num_pixel max 255 --> uint8_t (8bit)
-    // shift --> 256
-    const uint16_t shift_min = 256;
-    _outer_ring_min_multiplier = (shift_min * static_cast<uint16_t>(_config->outer_ring_num_leds)) / 60;
-    _inner_ring_min_multiplier = (shift_min * static_cast<uint16_t>(_config->inner_ring_num_leds)) / 60;
+    // shift --> 256*4 -> 10
+    const uint16_t shift_min = 256*4*4;
+    _outer_ring_min_multiplier = static_cast<uint16_t>((shift_min * static_cast<uint32_t>(_config->outer_ring_num_leds)) / 60) + 1;
+    _inner_ring_min_multiplier = static_cast<uint16_t>((shift_min * static_cast<uint32_t>(_config->inner_ring_num_leds)) / 60);
 
     // Time 0..60000 --> unit16_t (16bit)
     // num_pixel max 255 --> uint8_t (8bit)
@@ -67,9 +66,9 @@ Leds::effect_rotation_pxl_t Leds::initRotationPxl(uint8_t pos, uint8_t max_pixel
 }
 
 void Leds::updateInnerRotationPxl(effect_rotation_pxl_t * pxl) {
-    _inner_ring.setPixelColor(pxl->last_inner_pixel, Adafruit_NeoPixel::Color(0, 0, 0));
+    //_inner_ring.setPixelColor(pxl->last_inner_pixel, Adafruit_NeoPixel::Color(0, 0, 0));
     _inner_ring.setPixelColor(pxl->current_inner_pixel, pxl->color.color);
-    pxl->last_inner_pixel = pxl->current_inner_pixel;
+    //pxl->last_inner_pixel = pxl->current_inner_pixel;
     pxl->current_inner_pixel = (pxl->current_inner_pixel + rotation_speed);
     if (pxl->current_inner_pixel >= _config->inner_ring_num_leds) {
         pxl->current_inner_pixel = pxl->current_inner_pixel - _config->inner_ring_num_leds;
@@ -77,9 +76,9 @@ void Leds::updateInnerRotationPxl(effect_rotation_pxl_t * pxl) {
 }
 
 void Leds::updateOuterRotationPxl(effect_rotation_pxl_t * pxl) {
-    _outer_ring.setPixelColor(pxl->last_outer_pixel, Adafruit_NeoPixel::Color(0, 0, 0));
+    //_outer_ring.setPixelColor(pxl->last_outer_pixel, Adafruit_NeoPixel::Color(0, 0, 0));
     _outer_ring.setPixelColor(pxl->current_outer_pixel, pxl->color.color);
-    pxl->last_outer_pixel = pxl->current_outer_pixel;
+    //pxl->last_outer_pixel = pxl->current_outer_pixel;
     pxl->current_outer_pixel = (pxl->current_outer_pixel - rotation_speed);
     if (pxl->current_outer_pixel < 0) {
         pxl->current_outer_pixel = _config->outer_ring_num_leds + pxl->current_outer_pixel;
@@ -88,9 +87,9 @@ void Leds::updateOuterRotationPxl(effect_rotation_pxl_t * pxl) {
 
 void Leds::setTimeOnOuterRing(uint8_t hour, uint8_t min, uint16_t ms_in_min) {
     // hours
-    uint16_t center_pxl = (static_cast<uint16_t>(hour) * 5 * _outer_ring_min_multiplier) >> 8;
-    uint16_t center_pxl_m1 = (center_pxl == 0) ? _config->outer_ring_num_leds : center_pxl - 1;
-    uint16_t center_pxl_m2 = (center_pxl_m1 == 0) ? _config->outer_ring_num_leds : center_pxl_m1 - 1;
+    uint16_t center_pxl = static_cast<uint16_t>((static_cast<uint32_t>(hour) * 5 * _outer_ring_min_multiplier) >> 12);
+    uint16_t center_pxl_m1 = (center_pxl == 0) ? _config->outer_ring_num_leds -1 : center_pxl - 1;
+    uint16_t center_pxl_m2 = (center_pxl_m1 == 0) ? _config->outer_ring_num_leds -1 : center_pxl_m1 - 1;
     uint16_t center_pxl_p1 = (center_pxl + 1 == _config->outer_ring_num_leds) ? 0 : center_pxl + 1;
     uint16_t center_pxl_p2 = (center_pxl_p1 + 1 == _config->outer_ring_num_leds) ? 0 : center_pxl_p1 + 1;
     _outer_ring.setPixelColor(center_pxl_m2, _dimmed_color.hours);
@@ -100,7 +99,7 @@ void Leds::setTimeOnOuterRing(uint8_t hour, uint8_t min, uint16_t ms_in_min) {
     _outer_ring.setPixelColor(center_pxl_p2, _dimmed_color.hours);
 
     // minutes
-    _outer_ring.setPixelColor((static_cast<uint16_t>(min) * _outer_ring_min_multiplier) >> 8, _dimmed_color.minutes);
+    _outer_ring.setPixelColor(static_cast<uint16_t>((static_cast<uint32_t>(min) * _outer_ring_min_multiplier) >> 12), _dimmed_color.minutes);
 
     // seconds
     _outer_ring.setPixelColor(static_cast<uint16_t>((static_cast<uint32_t>(ms_in_min) * _outer_ring_second_multiplier) >> 16), _dimmed_color.seconds);
@@ -108,7 +107,7 @@ void Leds::setTimeOnOuterRing(uint8_t hour, uint8_t min, uint16_t ms_in_min) {
 
 void Leds::setTimeOnInnerRing(uint8_t hour, uint8_t min, uint16_t ms_in_min) {
     // hours
-    uint16_t center_pxl = (static_cast<uint16_t>(hour) * 5 * _inner_ring_min_multiplier) >> 8;
+    uint16_t center_pxl = static_cast<uint16_t>((static_cast<uint32_t>(hour) * 5 * _inner_ring_min_multiplier) >> 12);
     uint16_t center_pxl_m1 = (center_pxl == 0) ? _config->inner_ring_num_leds : center_pxl - 1;
     uint16_t center_pxl_p1 = (center_pxl + 1 == _config->inner_ring_num_leds) ? 0 : center_pxl + 1;
     _inner_ring.setPixelColor(center_pxl_m1, _dimmed_color.hours);
@@ -116,7 +115,7 @@ void Leds::setTimeOnInnerRing(uint8_t hour, uint8_t min, uint16_t ms_in_min) {
     _inner_ring.setPixelColor(center_pxl_p1, _dimmed_color.hours);
 
     // minutes
-    _inner_ring.setPixelColor((static_cast<uint16_t>(min) * _inner_ring_min_multiplier) >> 8, _dimmed_color.minutes);
+    _inner_ring.setPixelColor(static_cast<uint16_t>((static_cast<uint32_t>(min) * _inner_ring_min_multiplier) >> 12), _dimmed_color.minutes);
 
     // seconds
     _inner_ring.setPixelColor(static_cast<uint16_t>((static_cast<uint32_t>(ms_in_min) * _inner_ring_second_multiplier) >> 16), _dimmed_color.seconds);
@@ -145,20 +144,6 @@ void Leds::setOuterRingDefaults(void) {
     _outer_ring.setPixelColor(one_forth*3, _dimmed_color.marks);
 }
 
-uint16_t Leds::estimateMillisecondsInMinute(uint8_t current_sec, uint8_t current_min) {
-    if (current_sec == _previous_second) {
-        // return millis since last change
-        uint32_t current_time = millis();
-
-        return static_cast<uint16_t>(((current_time - _time_previous_second)*26)>>4) + current_sec * 1000;
-    } else {
-        _previous_second = current_sec;
-        _time_previous_second = millis();
-
-        return current_sec * 1000;
-    }
-}
-
 void Leds::setup(void) {
     _inner_ring.setPin(_config->inner_ring_pin);
     _inner_ring.begin();
@@ -166,8 +151,6 @@ void Leds::setup(void) {
     _outer_ring.begin();
     setInnerRingDefaults();
     setOuterRingDefaults();
-
-    _time_previous_second = millis();
 
     fullHourSpin(6);
 }
@@ -182,7 +165,7 @@ uint32_t Leds::scaleColor(const color_t & input, const color_t & min, uint16_t s
 
 void Leds::updateBrightness(const uint32_t & lux) {
     // lux should be 40000 in max. 1000 means very bright day
-    uint16_t scale = min(255L, lux >> 1);
+    uint16_t scale = min(255L, lux);
 
     //color_t test {.color = _dimmed_color.marks};
     //_logger->log(Logger::DEBUG, "Scale:" + String(scale) + ", r:" + String(test.splitted.r) + ", g:" + String(test.splitted.g)+ ", b:" + String(test.splitted.b));
@@ -217,30 +200,32 @@ void Leds::fixingClockRotation(uint8_t *hour, uint8_t *min, uint16_t *ms_in_min)
     }
 }
 
-void Leds::update(const Time & current_time) {
+void Leds::update(const Time & current_time, const uint16_t & milliseconds_in_minute) {
     if ((current_time.min == 0) && (current_time.sec == 0)) {
         fullHourSpin(current_time.hr);
     }
-    showTime(current_time);
+    showTime(current_time, milliseconds_in_minute);
 }
 
 void Leds::fullHourSpin(uint8_t rotations) {
-    _inner_ring.clear();
-    _outer_ring.clear();
     for (int16_t n = rotations * _config->inner_ring_num_leds; n > 0; n-=rotation_speed) {
+        _outer_ring.clear();
         for (auto &pxl: _dimmed_rotation_pixels) {
-            updateInnerRotationPxl(&pxl);
             updateOuterRotationPxl(&pxl);
         }
         _outer_ring.show();
+
+        _inner_ring.clear();
+        for (auto &pxl: _dimmed_rotation_pixels) {
+            updateInnerRotationPxl(&pxl);
+        }
         _inner_ring.show();
     }
+
+
 }
 
-void Leds::showTime(const Time & current_time) {
-    setInnerRingDefaults();
-    setOuterRingDefaults();
-
+void Leds::showTime(const Time & current_time, uint16_t ms) {
     uint8_t hour = current_time.hr;
     if (hour > 12) {
         hour -= 12;
@@ -250,14 +235,14 @@ void Leds::showTime(const Time & current_time) {
     }
 
     uint8_t min = current_time.min;
-    uint16_t ms = estimateMillisecondsInMinute(current_time.sec, current_time.min);
     fixingClockRotation(&hour, &min, &ms);
 
     //Serial.println(String(millis()) + ";" + String(current_time.sec));
-
+    setInnerRingDefaults();
     setTimeOnInnerRing(hour, min, ms);
     _inner_ring.show();
 
+    setOuterRingDefaults();
     setTimeOnOuterRing(hour, min, ms);
     _outer_ring.show();
 

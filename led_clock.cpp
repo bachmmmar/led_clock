@@ -68,5 +68,5 @@ void loop() {
     if (ambient.update()) {
         led.updateBrightness(ambient.brightness_lux);
     }
-    led.update(clk.current_time);
+    led.update(clk.current_time, clk.milliseconds_in_minute);
 }
