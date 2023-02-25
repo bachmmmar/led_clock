@@ -77,10 +77,17 @@
               pixel.
   @return  Adafruit_NeoPixel object. Call the begin() function before use.
 */
-Adafruit_NeoPixel::Adafruit_NeoPixel(uint16_t n, int16_t p, neoPixelType t)
-    : begun(false), brightness(0), pixels(NULL), endTime(0) {
-  updateType(t);
-  updateLength(n);
+Adafruit_NeoPixel::Adafruit_NeoPixel(uint16_t n, int16_t p, neoPixelType t, uint8_t *buffer)
+    : begun(false), brightness(0), pixels(buffer), endTime(0) {
+
+    updateType(t);
+    if (buffer==NULL) {
+        updateLength(n);
+    } else {
+        numBytes = n * ((wOffset == rOffset) ? 3 : 4);
+        numLEDs = n;
+    }
+
   setPin(p);
 #if defined(ARDUINO_ARCH_RP2040)
   // Find a free SM on one of the PIO's
